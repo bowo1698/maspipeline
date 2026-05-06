@@ -22,6 +22,7 @@ env/
 data/
 results/
 output/
+target/
 
 # Log files
 *.log
