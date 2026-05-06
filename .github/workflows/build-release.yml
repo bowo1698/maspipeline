@@ -11,10 +11,6 @@ jobs:
   build:
     name: Build ${{ matrix.config.target }}
     runs-on: ${{ matrix.config.os }}
-
-    defaults:
-      run:
-        working-directory: /Users/runner/work/maspipeline/maspipeline
     
     strategy:
       fail-fast: false
@@ -94,7 +90,7 @@ jobs:
           cd dist
           tar -czf microhaplotype-tools-${{ matrix.config.arch }}.tar.gz \
             haplotype-hybrid convert-to-vcf convert-from-vcf
-          mv microhaplotype-tools-${{ matrix.config.arch }}.tar.gz ../../
+          mv microhaplotype-tools-${{ matrix.config.arch }}.tar.gz ./
       
       - name: Prepare binaries (Windows)
         if: runner.os == 'Windows'
@@ -106,7 +102,7 @@ jobs:
           Copy-Item target/${{ matrix.config.target }}/release/convert-from-vcf.exe dist/
           
           Compress-Archive -Path dist/* -DestinationPath microhaplotype-tools-${{ matrix.config.arch }}.zip
-          Move-Item microhaplotype-tools-${{ matrix.config.arch }}.zip ../
+          Move-Item microhaplotype-tools-${{ matrix.config.arch }}.zip ./
       
       - name: Upload artifact
         uses: actions/upload-artifact@v4
