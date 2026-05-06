@@ -31,7 +31,7 @@ We provide three tools for the microhaplotype discovery and genotyping preproces
 We provide two installation options:
 
 1. **Build from source** (Recommended): Compile using Rust's Cargo package manager
-2. **Pre-compiled binaries** (Quick start): Download platform-specific executables from the [Releases](https://github.com/bowo1698/MicrohapsSel/releases/tag/v1.0) page
+2. **Pre-compiled binaries** (Quick start): Download platform-specific executables from the [Releases](https://github.com/bowo1698/maspipeline/releases/tag/v1) page
 
 > We strongly encourage building from source using Cargo, as different operating systems and hardware architectures may require specific optimisations.
 
@@ -45,7 +45,7 @@ We provide two installation options:
 
 ```bash
 # 1. Clone the repository
-git clone https://github.com/bowo1698/MicrohapsSel.git
+git clone https://github.com/bowo1698/maspipeline.git
 cd MicrohapsSel
 
 # 2. Navigate to preprocessing directory
@@ -78,15 +78,15 @@ $env:Path += ";$PWD\target\release"
 
 Download platform-specific binaries from the links below:
 
-- **Linux (x86_64)**: [microhaplotype-tools-x64-linux.tar.gz](https://github.com/bowo1698/MicrohapsSel/releases/download/v1.0/microhaplotype-tools-x64-linux.tar.gz)
-- **macOS (Intel)**: [microhaplotype-tools-x64-macos.tar.gz](https://github.com/bowo1698/MicrohapsSel/releases/download/v1.0/microhaplotype-tools-x64-macos.tar.gz)
-- **macOS (Apple Silicon)**: [microhaplotype-tools-arm64-macos.tar.gz](https://github.com/bowo1698/MicrohapsSel/releases/download/v1.0/microhaplotype-tools-arm64-macos.tar.gz)
-- **Windows (x86_64)**: [microhaplotype-tools-x64-windows.zip](https://github.com/bowo1698/MicrohapsSel/releases/download/v1.0/microhaplotype-tools-x64-windows.zip)
+- **Linux (x86_64)**: [microhaplotype-tools-x64-linux.tar.gz](https://github.com/bowo1698/maspipeline/releases/download/v1/microhaplotype-tools-x64-linux.tar.gz)
+- **macOS (Intel)**: [microhaplotype-tools-x64-macos.tar.gz](https://github.com/bowo1698/maspipeline/releases/download/v1/microhaplotype-tools-x64-macos.tar.gz)
+- **macOS (Apple Silicon)**: [microhaplotype-tools-arm64-macos.tar.gz](https://github.com/bowo1698/maspipeline/releases/download/v1/microhaplotype-tools-arm64-macos.tar.gz)
+- **Windows (x86_64)**: [microhaplotype-tools-x64-windows.zip](https://github.com/bowo1698/maspipeline/releases/download/v1/microhaplotype-tools-x64-windows.zip)
 
 **Linux:**
 ```bash
 # Download and extract
-wget https://github.com/bowo1698/MicrohapsSel/releases/download/v1.0/microhaplotype-tools-x64-linux.tar.gz
+wget https://github.com/bowo1698/maspipeline/releases/download/v1/microhaplotype-tools-x64-linux.tar.gz
 tar -xzf microhaplotype-tools-x64-linux.tar.gz
 cd microhaplotype-tools-x64-linux
 
@@ -105,7 +105,7 @@ sudo mv convert-to-vcf convert-from-vcf haplotype-hybrid /usr/local/bin/
 **macOS (Intel x86_64):**
 ```bash
 # Download and extract
-curl -L -O https://github.com/bowo1698/MicrohapsSel/releases/download/v1.0/microhaplotype-tools-x64-macos.tar.gz
+curl -L -O https://github.com/bowo1698/maspipeline/releases/download/v1/microhaplotype-tools-x64-macos.tar.gz
 tar -xzf microhaplotype-tools-x64-macos.tar.gz
 cd microhaplotype-tools-x64-macos
 
@@ -125,7 +125,7 @@ sudo mv convert-to-vcf convert-from-vcf haplotype-hybrid /usr/local/bin/
 **macOS (Apple silicon ARM64):**
 ```bash
 # Download and extract
-curl -L -O https://github.com/bowo1698/MicrohapsSel/releases/download/v1.0/microhaplotype-tools-arm64-macos.tar.gz
+curl -L -O https://github.com/bowo1698/maspipeline/releases/download/v1/microhaplotype-tools-arm64-macos.tar.gz
 tar -xzf microhaplotype-tools-arm64-macos.tar.gz
 cd microhaplotype-tools-arm64-macos
 
@@ -145,7 +145,7 @@ sudo mv convert-to-vcf convert-from-vcf haplotype-hybrid /usr/local/bin/
 **Windows:**
 ```powershell
 # Download (using PowerShell)
-Invoke-WebRequest -Uri "https://github.com/bowo1698/MicrohapsSel/releases/download/v1.0/microhaplotype-tools-x64-windows.zip" -OutFile "microhaplotype-tools-x64-windows.zip"
+Invoke-WebRequest -Uri "https://github.com/bowo1698/maspipeline/releases/download/v1/microhaplotype-tools-x64-windows.zip" -OutFile "microhaplotype-tools-x64-windows.zip"
 
 # Extract
 Expand-Archive -Path microhaplotype-tools-x64-windows.zip -DestinationPath microhaplotype-tools-x64-windows
@@ -205,14 +205,14 @@ snp_3	1	217334
 
 We provide `convert-to-vcf` to convert such genotype data to a VCF file. This tool can be run as follows:
 
-```
+```bash
 ./convert-to-vcf \
       -i genotypes.csv \
       -m map.txt \
       -o genotypes.vcf \
       --split-by-chr \
       --parallel \
-      --ncores 64 \
+      --ncores 4 \
       --merge-after-split
 ```
 
@@ -336,8 +336,7 @@ This provides input for GBLUP or other genotype-based prediction models that uti
       -i /data/genotypes_phased.vcf.gz \
       --map map.txt \
       --genofolder geno \
-      --hapfolder hap \
-      --nosort
+      --hapfolder hap
 ```
 
 ### Key Parameters
@@ -355,11 +354,7 @@ The separated haplotype files (`hap/chr*`) then serve as direct input for the ne
 
 ## Discovering microhaplotype segments and genotyping
 
-Because our objective is to discover microhaplotype segments, we only use outputs from `hap/chr*` and perform arguments `--method ld-haploblock` and `--haplotype-type micro`. The `haplotype-hybrid` tool works with finding all potential haplotype candidates that meet an LD criteria (e.g., $D' > 0.45$) as the argument of `--d-prime-threshold 0.45` is applied. After that, align with the microhaplotype definition, they are selected from the haplotype block candidates, where in each segment should contain consecutive SNPs within 125 or 150 bp which then they are evaluated using Criterion-B following [Jónás et al. (2017)](https://www.journalofdairyscience.org/article/S0022-0302(16)30076-5/fulltext) to ensure balance between allele frequency and microhaplotype diversity, following the calculation:
-
-$$CriterionB_{m h_i}=\sum_{k=1}^{N_i}\left(f_i-\frac{1}{H S}\right)^2-w N_i$$
-
-In the first term, $m h_i$ denotes microhaplotype $i$, $f_i$ is the frequency of microhaplotype allele, and $HS=2^n$ is the theoretical maximum number of alleles for n SNPs. In the second term, $w$ is calculated as $(MD.N_i)/(HS.(N_i-1) )$, where $MD$ is the scaling parameter of maximum deviation to control the magnitude of microhaplotype diversity. We set the $MD$ as $0.1$ following (Jónás et al., 2017). The $N_i$ represents the number of predictable alleles for microhaplotype $i$ that have a frequency above the allele frequency threshold ($AFT≥0.08$). 
+Because our objective is to discover microhaplotype segments, we only use outputs from `hap/chr*` and perform arguments `--method ld-haploblock` and `--haplotype-type micro`. The `haplotype-hybrid` tool works with finding all potential haplotype candidates that meet an LD criteria (e.g., $D' > 0.45$) as the argument of `--d-prime-threshold 0.45` is applied. After that, align with the microhaplotype definition, they are selected from the haplotype block candidates, where in each segment should contain consecutive SNPs within 125 or 150 bp.
 
 The final genotype data will be:
 
@@ -381,6 +376,7 @@ For example, at locus `hap_1_1`, individual `ind_1` has alleles `2` and `1`, mea
 ```bash
 # Microhaplotype discovery and genotyping (LD-based, physical window)
 ./haplotype-hybrid \
+      --ncores 4 \
       -i hap/chr* \
       -m map.txt \
       -o mh_info_ld_micro \
@@ -388,16 +384,7 @@ For example, at locus `hap_1_1`, individual `ind_1` has alleles `2` and `1`, mea
       -v \
       ld-haploblock micro --window-bp 125
 
-# Haplotype discovery and genotyping (LD-based, best SNP selection)
-./haplotype-hybrid \
-      -i hap/chr* \
-      -m map.txt \
-      -o mh_info_ld_pure \
-      --generate-genotypes hap_genotypes \
-      -v \
-      ld-haploblock pure --window 4
-
-# Fixed physical distance blocks (100 kb)
+# Fixed physical distance blocks (e.g., 100 kb)
 ./haplotype-hybrid \
       -i hap/chr* \
       -m map.txt \
@@ -405,18 +392,11 @@ For example, at locus `hap_1_1`, individual `ind_1` has alleles `2` and `1`, mea
       --generate-genotypes fixedkb_genotypes \
       -v \
       fixed-kb --window-bp 100000
-
-# Fixed SNP count per block
-./haplotype-hybrid \
-      -i hap/chr* \
-      -m map.txt \
-      -o mh_info_snpcount \
-      --generate-genotypes snpcount_genotypes \
-      -v \
-      snp-count --window 4
 ```
 
 ### Key Parameters
+
+Use ```./haplotype-hybrid --help``` to see manuals.
 
 - `-i, --input <INPUT>...`: Phased haplotype files, one per chromosome (required, e.g., `hap/chr*`)
 - `-m, --map <MAP>`: SNP map file with columns: SNPID, Chr, Position (required)
