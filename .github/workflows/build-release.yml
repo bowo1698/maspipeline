@@ -1,0 +1,148 @@
+# .github/workflows/build-release.yml
+name: Build and Release Preprocessing for Microhaplotype
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build ${{ matrix.config.target }}
+    runs-on: ${{ matrix.config.os }}
+
+    defaults:
+      run:
+        working-directory: maspipeline
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        config:
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            arch: x64-linux
+            ext: tar.gz
+          
+          - os: macOS-latest
+            target: x86_64-apple-darwin
+            arch: x64-macos
+            ext: tar.gz
+          
+          - os: macos-14
+            target: aarch64-apple-darwin
+            arch: arm64-macos
+            ext: tar.gz
+          
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            arch: x64-windows
+            ext: zip
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.config.target }}
+      
+      - name: Build release binaries
+        run: cargo build --release --target ${{ matrix.config.target }}
+      
+      - name: Prepare binaries (Unix)
+        if: runner.os != 'Windows'
+        run: |
+          mkdir -p dist
+          cp target/${{ matrix.config.target }}/release/haplotype-hybrid dist/
+          cp target/${{ matrix.config.target }}/release/convert-to-vcf dist/
+          cp target/${{ matrix.config.target }}/release/convert-from-vcf dist/
+
+          chmod +x dist/haplotype-hybrid
+          chmod +x dist/convert-to-vcf
+          chmod +x dist/convert-from-vcf
+
+          if [[ "$RUNNER_OS" == "macOS" ]]; then
+            echo "Applying macOS code signing workarounds..."
+            
+            export RUSTFLAGS="-C link-args=-Wl,-stack_size,0x2000000"
+            
+            # Rebuild with increased stack
+            cargo clean
+            cargo build --release --target ${{ matrix.config.target }}
+            
+            # Copy rebuilt binaries
+            cp target/${{ matrix.config.target }}/release/haplotype-hybrid dist/
+            cp target/${{ matrix.config.target }}/release/convert-to-vcf dist/
+            cp target/${{ matrix.config.target }}/release/convert-from-vcf dist/
+            
+            # Strip symbols
+            strip dist/haplotype-hybrid
+            strip dist/convert-to-vcf
+            strip dist/convert-from-vcf
+            
+            # Simple signing
+            codesign -s - -f dist/haplotype-hybrid
+            codesign -s - -f dist/convert-to-vcf
+            codesign -s - -f dist/convert-from-vcf
+            
+            chmod +x dist/*
+          fi
+          
+          cd dist
+          tar -czf microhaplotype-tools-${{ matrix.config.arch }}.tar.gz \
+            haplotype-hybrid convert-to-vcf convert-from-vcf
+          mv microhaplotype-tools-${{ matrix.config.arch }}.tar.gz ../../
+      
+      - name: Prepare binaries (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist
+          Copy-Item target/${{ matrix.config.target }}/release/haplotype-hybrid.exe dist/
+          Copy-Item target/${{ matrix.config.target }}/release/convert-to-vcf.exe dist/
+          Copy-Item target/${{ matrix.config.target }}/release/convert-from-vcf.exe dist/
+          
+          Compress-Archive -Path dist/* -DestinationPath microhaplotype-tools-${{ matrix.config.arch }}.zip
+          Move-Item microhaplotype-tools-${{ matrix.config.arch }}.zip ../
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: microhaplotype-tools-${{ matrix.config.arch }}
+          path: microhaplotype-tools-${{ matrix.config.arch }}.${{ matrix.config.ext }}
+          retention-days: 7
+
+  release:
+    name: Create Release
+    needs: build
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: microhaplotype-tools-*
+          merge-multiple: true
+      
+      - name: List artifacts
+        run: |
+          echo "Downloaded artifacts:"
+          ls -lh artifacts/
+      
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*
+          tag_name: ${{ github.ref_name }}
+          name: Microhaplotype Tools ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

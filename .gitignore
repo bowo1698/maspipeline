@@ -1,0 +1,38 @@
+# R
+.Rhistory
+.RData
+.Rproj.user
+*.Rproj
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.Python
+*.egg-info/
+venv/
+env/
+
+# Data files
+*.vcf
+*.vcf.gz
+*.rds
+*.csv
+*.txt
+data/
+results/
+output/
+
+# Log files
+*.log
+
+# System files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# HPC/SLURM
+slurm-*.out
+*.o[0-9]*
+*.e[0-9]*
