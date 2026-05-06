@@ -14,7 +14,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: maspipeline
+        working-directory: /Users/runner/work/maspipeline/maspipeline
     
     strategy:
       fail-fast: false
