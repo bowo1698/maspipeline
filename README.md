@@ -106,7 +106,7 @@ Full stage-by-stage walkthroughs (data preparation, phasing, conversion, microha
 
 ## Development Team
 
-**Lead Developer**
+**Maintainer**
 
 - Agus Wibowo — James Cook University
 
