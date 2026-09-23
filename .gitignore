@@ -41,3 +41,6 @@ slurm-*.out
 # Local backups
 *.bak
 *.bak.*
+
+# Local Git worktrees
+.worktrees/
